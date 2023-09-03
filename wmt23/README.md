@@ -7,8 +7,8 @@ All information about the shared task is [here](https://wmt-qe-task.github.io/).
 Scripts are written for Python3, please check the list of imported modules in each script before running.
 
 for **Task 1**, use the following scripts:
-* sentence-level:  `python sent_evaluate_multilingual.py -h` 
-* word-level:  `python word_evaluate_multilingual.py -h` 
+* sentence-level:  `python task1_sentence_evaluate.py -h` 
+* word-level:  `python task1_word_evaluate.py -h` 
 
 for **Task 2**, use the following scripts:
 * error span detection:  `python task2_evaluate.py -h` 
