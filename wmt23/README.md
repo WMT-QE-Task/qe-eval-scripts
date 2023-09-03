@@ -18,6 +18,6 @@ for **Task 2**, use the following scripts:
 
 Like in previous year, the QE shared task was hosted on the Codalab platform:
 
-[Task 1 sentence-level](https://codalab.lisn.upsaclay.fr/competitions/15043)
-[Task 1 word-level](https://codalab.lisn.upsaclay.fr/competitions/15044)
-[Task 2 error span detection](https://codalab.lisn.upsaclay.fr/competitions/15045)
+[Task 1 sentence-level](https://codalab.lisn.upsaclay.fr/competitions/15043)  
+[Task 1 word-level](https://codalab.lisn.upsaclay.fr/competitions/15044)  
+[Task 2 error span detection](https://codalab.lisn.upsaclay.fr/competitions/15045)  
