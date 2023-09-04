@@ -13,7 +13,7 @@ Scoring programme for WMT'23 Task 1 Sentence-level
 
 language_pairs = ['en-de', 'zh-en', 'he-en', 'en-mr', 'en-hi', 'en-gu', 'en-te', 'en-ta']
 
-def parse_submission(pred_list, goldlabel_bool):
+def parse_submission(pred_list, goldlabel_bool, hallucinations):
     disk_footprint = 0
     model_params = 0
     ensemble = 1
@@ -40,13 +40,16 @@ def parse_submission(pred_list, goldlabel_bool):
     
     for lp_str in lp_dict_keys:
         lp_segments = lp_dict[lp_str]
-        # The following block make sure that the segment_number is used to keep
-        # the scores in order
+
         tmp_lp_segments = {}
         for _, seg_nb, seg_score in lp_segments:
-            tmp_lp_segments[seg_nb] = float(seg_score)
+            hall_idx =  hallucinations[lp_str]
+            if goldlabel_bool and str(seg_nb) in hall_idx:
+                tmp_lp_segments[seg_nb] = -100.00
+            else:
+                tmp_lp_segments[seg_nb] = float(seg_score)
+        lp_dict[lp_str] = [tmp_lp_segments[str(i)] for i in range(len(tmp_lp_segments))]
 
-        lp_dict[lp_str] = np.array(list(dict(sorted(tmp_lp_segments.items())).values()))
 
     return disk_footprint, model_params, ensemble, lp_dict
 
@@ -80,7 +83,7 @@ if __name__ == '__main__':
     submission_dir = os.path.join(input_dir, 'res')
 
     goldlabels_file_name= 'gold_labels_task1_sentence.tsv'
-    baseline_file_name= 'sentence_baseline_v1.txt'
+    baseline_file_name= ''
     hallucinations_file_name= 'gold_hallucinations_task1_sentence.tsv'
     submission_file_name = "predictions.txt"
 
@@ -95,28 +98,26 @@ if __name__ == '__main__':
     hallucinations_path = os.path.join(reference_dir, hallucinations_file_name)
     submission_path = os.path.join(submission_dir, submission_file_name)
 
-    print("Loading goldlabels...")
-    # with codecs.open(args.gold, 'r', encoding='utf-8') as truth_file:
-    with codecs.open(goldlabels_path, 'r', encoding='utf-8') as truth_file:
-        _, _, _, goldlabels = parse_submission(truth_file.readlines(), True)
+    print("Loading hallucination indices...")
+    with codecs.open(hallucinations_path, 'r', encoding='utf-8') as hal_file:
+        hal_idx = parse_hallucinations(hal_file.readlines())
     print("done.")
-
     
-        
     if compute_baseline:
         print("Loading baseline...")
         with codecs.open(baseline_path, 'r', encoding='utf-8') as base_file:
-            _, _, _, baseline = parse_submission(base_file.readlines(), False)
+            _, _, _, baseline = parse_submission(base_file.readlines(), False, hal_idx)
         print("done.")
-
-    print("Loading h indices...")
-    with codecs.open(hallucinations_path, 'r', encoding='utf-8') as hal_file:
-        hal_idx = parse_hallucinations(hal_file.readlines())
+        
+    print("Loading goldlabels...")
+    # with codecs.open(args.gold, 'r', encoding='utf-8') as truth_file:
+    with codecs.open(goldlabels_path, 'r', encoding='utf-8') as truth_file:
+        _, _, _, goldlabels = parse_submission(truth_file.readlines(), True, hal_idx)
     print("done.")
 
     print("Loading your predictions...")
     with codecs.open(submission_path, 'r', encoding='utf-8') as submission_file:
-        disk_footprint, model_params, ensemble, predictions = parse_submission(submission_file.readlines(), False)
+        disk_footprint, model_params, ensemble, predictions = parse_submission(submission_file.readlines(), False, hal_idx)
     print("done.")
 
     all_scores = []
@@ -162,9 +163,10 @@ if __name__ == '__main__':
         final_dict[lp_str+'_spearman'] = spearman
         final_dict[lp_str+'_kendall'] = kendall
         all_scores.append([spearman, pearson, kendall])
-        base_s = baseline_dict[lp_str+'_spearman']
-        base_p = baseline_dict[lp_str+'_pearson']
-        base_k = baseline_dict[lp_str+'_kendall']
+        if compute_baseline:
+            base_s = baseline_dict[lp_str+'_spearman']
+            base_p = baseline_dict[lp_str+'_pearson']
+            base_k = baseline_dict[lp_str+'_kendall']
         # final_score_lines.append(lp_str.upper()+'\n')
         
         final_score_lines.append(lp_str.replace('-','')+"_spearman: {:.4}".format(spearman))
